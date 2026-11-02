@@ -1,211 +1,138 @@
 # SubLens
 
-> Windows için gerçek zamanlı OCR tabanlı oyun diyalog çevirmeni — ekranın herhangi bir bölgesindeki metni okur ve çeviriyi oyununun üzerinde sürüklenebilir bir overlay olarak gösterir.
+Ekranın istediğin bölümündeki altyazı ve diyalogları okur, çevirisini anında oyunun üstünde gösterir. Windows 10/11.
 
 <p align="center">
-  <img src="SubLens.ico" alt="SubLens" width="80"/>
+  <img src="docs/icon.png" alt="SubLens simgesi" width="80"/>
+</p>
+
+> **English:** [README.md](README.md)
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="SubLens penceresi" width="420"/>
 </p>
 
 ---
 
+## İndirme
+
+[Releases](https://github.com/bnsware/SubLens/releases/latest) sayfasından `SubLens.exe` dosyasını indirip çalıştır. Kurulum gerekmez.
+
+Exe, PyInstaller ile derlenmiştir ve kod imzası yoktur. Bu yüzden Windows SmartScreen ya da bazı antivirüs motorları uyarı verebilir. İstersen [kaynak koddan da çalıştırabilirsin](#kaynak-koddan-çalıştırma).
+
+## Hızlı başlangıç
+
+1. **F2**'ye bas ve oyundaki altyazının etrafına kutu çiz. İki satırlık altyazılarda iki satırı da kapsa.
+2. Dilleri ve çevirmeni seç. Google Translate kurulum gerektirmez.
+3. **F4**'e bas ve oyuna geç.
+
+Metin kötü okunuyorsa ekranda altyazı varken **Otomatik ayarla** düğmesine bas.
+
+SubLens metni Windows OCR ile okur, bu yüzden kaynak dilin OCR paketi kurulu olmalıdır. Paket eksikse uygulama bunu söyler ve kurulum komutunu verir.
+
 ## Özellikler
 
-- **3 çeviri motoru** — istediğin zaman geçiş yap
-  - **LM Studio** — tamamen yerel AI, internet gerekmez (kaynak yoğun)
-  - **DeepL Free** — 500.000 karakter/ay, yüksek kalite
-  - **Google Translate** — gayri resmi ücretsiz endpoint, API anahtarı gerekmez
-- **Akıllı OCR** (Tesseract tabanlı)
-  - 6 ön işleme modu (otomatik, açık yazı, koyu yazı, altyazı top-hat, konturlu, equalize)
-  - Otsu eşikleme + medyan filtre + kontrast artışı
-  - 2× / 3× / 4× büyütme seçenekleri
-  - PSM modu seçimi (tek blok, tek satır, dağınık metin, ham satır)
-  - Otomatik en iyi mod tespiti (6 modu dener, en yüksek güven skorunu seçer)
-- **Şeffaf overlay** — oyunun üstünde yüzer, motora göre renklenir, sürüklenebilir
-- **Sürekli tarama** — ayarlanabilir aralık (0,5–15 sn), yeni metin algılandığında otomatik çeviri
-- **Benzerlik eşiği** — küçük OCR titremelerinde gereksiz yeniden çeviri yapmaz
-- **LRU çeviri önbelleği** — 200 girdi, gereksiz API çağrısını engeller
-- **Global hotkey** — tam ekran oyunlarda da çalışır (F2 / F3 / F4 + Ctrl+Alt+R/T/G/H)
-- **Auto-pause** — hedef oyun penceresi pasifleşince tarama duraklatılır
-- **Glossary** — özel isimleri ve terimleri çeviriden koru
-- **Sistem tepsisi** — uygulamayı tepsiye küçült, çift tıkla geri getir
-- **Çoklu monitör** desteği
-- **Yapılandırma** `%APPDATA%\SubLens\config.json` dosyasına otomatik kaydedilir
+**Okuma**
+- Windows 10/11'de yerleşik Windows OCR kullanılır. Ayrı bir OCR programı gerekmez.
+- Üç metin stili vardır: Otomatik, Parlak altyazı ve Diyalog kutusu. Otomatik ayarla en iyi okuma ayarlarını kendisi seçer.
+- Alt alta gelen satırlar tek cümle olarak birleştirilir, her konuşmacı etiketi yeni paragraf başlatır.
+- Tuş ikonları, semboller ve küçük arayüz ipuçları ayıklanır.
+- Yarı saydamken bozuk okunan metin, okunaklı hale gelene kadar bekletilir. Bozuk okuma çevrildiyse temiz okuma onun yerine geçer.
+- Bozuk konuşmacı etiketleri düzeltilir ("eter:" ya da "Peter." → "Peter:").
+- Kayan altyazılar (YouTube, yayınlar) tek akış olarak izlenir, böylece satırlar iki kez çevrilmez.
 
----
+**Çeviri**
 
-## Gereksinimler
+| Motor | Kurulum | Not |
+|---|---|---|
+| Google Translate | Yok | Ücretsiz ama gayri resmi uç nokta olduğu için sınırlanabilir |
+| DeepL | API anahtarı (ücretsiz planı var) | Önceki satırları bağlam olarak kullanır |
+| AI (OpenAI uyumlu) | LM Studio ya da Ollama (yerel) veya OpenAI, OpenRouter, Groq anahtarı | Konuşma bağlamını, oyun bağlamını ve sözlüğü kullanır |
+| Claude | Anthropic API anahtarı | Bağlam özellikleri yukarıdakiyle aynı |
+| Gemini | Google AI Studio anahtarı | Bağlam özellikleri yukarıdakiyle aynı |
 
-| Bağımlılık | Notlar |
-|---|---|
-| Python 3.9+ | |
-| [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) | `C:\Program Files\Tesseract-OCR\` yoluna kur |
-| Pillow | `pip install pillow` |
-| pytesseract | `pip install pytesseract` |
-| PySide6 | `pip install PySide6` |
-| mss *(isteğe bağlı)* | Hızlı çoklu monitör yakalama — `pip install mss` |
-| keyboard *(isteğe bağlı)* | Global hotkey — `pip install keyboard` |
-| pywin32 *(isteğe bağlı)* | Auto-pause özelliği — `pip install pywin32` |
+- AI motorlarına önceki satırlar çevirileriyle birlikte gider, bu yüzden kısa cevaplar doğru çevrilir: "Bunu denemelisin." cümlesinden sonra gelen "Neyi?", "What?" değil "Try what?" olur.
+- Sözlük: adları çevirmeden bırakabilir ya da belirli bir karşılığı zorlayabilirsin.
+- Oyun profilleri: alan, dil, okuma ayarları, bağlam ve sözlük oyun bazında saklanır. Oyunun exe'sine bağlanırsa kendiliğinden yüklenir.
 
-Hepsini tek komutla kur:
+**Çeviri katmanı ve uygulama**
+- Altyazıya göre boyutlanan, sürüklenebilir bir katman. Ekran yakalamaya görünmez, bu yüzden kendi çevirisini tekrar okumaz.
+- Yazı boyutu, saydamlık, konum ve tıklamaların oyuna geçmesi ayarları.
+- Türkçe ve İngilizce arayüz.
+- Global kısayollar, oyun öne çıkmadığında otomatik duraklama ve kapatılabilir bildirimli sistem tepsisi simgesi.
 
-```bash
-pip install pillow pytesseract PySide6 mss keyboard pywin32
-```
+## Kısayollar
 
-> **Tesseract dil paketleri** — Tesseract kurulumunda ihtiyaç duyduğun dilleri seç (`eng`, `tur`, `jpn`, `kor` vb.). Bir paket eksikse uygulama otomatik olarak `eng`'e düşer ve log'da uyarı verir.
+| Tuş | Global alternatif | İşlev |
+|---|---|---|
+| F2 | Ctrl+Alt+R | Alan seç |
+| F3 | Ctrl+Alt+T | Tek seferlik çeviri |
+| F4 | Ctrl+Alt+G | Başlat / durdur |
+| Esc | Ctrl+Alt+H | Çeviri katmanını gizle |
 
----
+Global kısayollar tam ekran oyunlarda da çalışır. Oyun yönetici olarak çalışıyorsa SubLens'i de yönetici olarak aç. Kısayollar henüz değiştirilemiyor. Klavyende F tuşları yoksa Ctrl+Alt kısayollarını ya da penceredeki düğmeleri kullan.
 
-## Kurulum
+## Kaynak koddan çalıştırma
 
-```bash
+Python 3.13 ile test edildi.
+
+```bat
 git clone https://github.com/bnsware/SubLens.git
 cd SubLens
-pip install pillow pytesseract PySide6 mss keyboard pywin32
-python sublens.py
+sublens.bat
 ```
 
----
+`sublens.bat` sanal ortamı oluşturur, bağımlılıkları kurar ve uygulamayı başlatır. Elle yapmak için:
 
-## Hızlı Başlangıç
-
-1. `python sublens.py` ile uygulamayı başlat
-2. **Çeviri motoru** seç (Google, kurulum gerektirmez — başlangıç için idealdir)
-3. **Kaynak** ve **hedef dil** seç
-4. Oyundaki diyalog kutusunu çerçevelemek için **F2**'ye bas
-5. Tek seferlik çeviri için **F3**, sürekli tarama için **F4**'e bas
-
----
-
-## Kısayol Tuşları
-
-| Tuş | Fonksiyon |
-|---|---|
-| **F2** | Ekran bölgesi seç |
-| **F3** | Tek seferlik çeviri |
-| **F4** | Sürekli taramayı başlat / durdur |
-| **ESC** | Overlay'i gizle / bölge seçimini iptal et |
-| **Ctrl+Alt+R** | Bölge seç (global) |
-| **Ctrl+Alt+T** | Tek çeviri (global) |
-| **Ctrl+Alt+G** | Taramayı aç/kapat (global) |
-| **Ctrl+Alt+H** | Overlay'i gizle (global) |
-
----
-
-## Motor Ayarları
-
-### LM Studio
-1. LM Studio'yu aç → bir model yükle → **Local Server**'ı başlat (varsayılan port: 1234)
-2. SubLens Ayarlar penceresinde **URL** ve **Model** gir, **Bağlan** ile test et
-- ✅ Tamamen offline, gizlilik dostu
-- ⚠️ GPU/RAM yoğun — ağır oyunlarda aynı anda çalışınca FPS düşürebilir
-
-### DeepL Free
-1. [deepl.com](https://www.deepl.com/) adresinde ücretsiz hesap aç → Free API anahtarı al
-2. Anahtarı SubLens Ayarlar penceresine yapıştır → aylık kullanımı görmek için **Test** et
-- ✅ En yüksek çeviri kalitesi, düşük kaynak tüketimi
-- ⚠️ Aylık 500k karakter limiti
-
-### Google Translate
-- API anahtarı gerekmez, anında çalışır
-- ✅ Sıfır kurulum
-- ⚠️ Gayri resmi endpoint — Google zaman zaman hız limiti veya blok uygulayabilir
-
----
-
-## OCR İpuçları
-
-- **Büyütme**: küçük yazılar için 3× veya 4× dene
-- **OCR Modu**:
-  - *Otomatik* — arka plan parlaklığına göre modu seçer
-  - *Açık yazı* — koyu zemin üzerine açık metin
-  - *Koyu yazı* — açık zemin üzerine koyu metin
-  - *Altyazı (top-hat)* — **karmaşık/dağınık arka planlar için en iyisi** (su, bulanık manzara, UI öğeleri). Yerel arka plan çıkarma + adaptif eşikleme kullanır. RDR2, Spider-Man 2 gibi oyunlarda harika çalışır.
-  - *Konturlu altyazı* — kontür/stroke içeren oyun altyazıları için
-  - *Equalize* — çok değişken arka planlar için histogram dengeleme
-- **PSM 6** çoğu diyalog kutusu için iyidir; tek satırlık altyazılar için **PSM 7** dene
-- **İşlenmiş görüntüyü önizle** seçeneğini aç — Tesseract'ın tam olarak ne gördüğünü gösterir, ayar yaparken paha biçilmez
-
----
-
-## Oyun Bağlamı (yalnızca LM Studio)
-
-Ayarlar → **Oyun Bağlamı** alanına çevirinin tonunu yönlendirecek bir ipucu yaz:
-
-> Örn: `Wild West, 1899, kovboy diyalogu`
-
-DeepL ve Google bu alanı kullanmaz.
-
----
-
-## Glossary (Terim Koruma)
-
-Ayarlar → **Glossary** bölümüne, satır başına bir terim ekle:
-
-```
-Arthur=Arthur
-RedDead
-Guarma=Guarma
+```bat
+pip install -r requirements.txt
+python main.py
 ```
 
-- Yalnız `terim` — kelimeyi olduğu gibi bırakır (çevirmez)
-- `kaynak=hedef` — çeviriden sonra kaynak terimi hedefle değiştirir
+Testleri `python -m unittest discover tests` ile çalıştırabilirsin.
 
----
+## Exe derleme
 
-## Sorun Giderme
+```bat
+sublens_exe.bat
+```
+
+Sonuç `dist\SubLens.exe` dosyasıdır.
+
+## Sorun giderme
 
 | Belirti | Çözüm |
 |---|---|
-| "Tesseract dil paketi bulunamadi" | İlgili dilin `.traineddata` dosyasını Tesseract klasörüne ekle |
-| OCR boş metin döndürüyor | Bölgeyi sıkılaştır, büyütmeyi artır veya OCR modunu manuel seç |
-| Google motoru hata veriyor | Geçici olarak DeepL veya LM Studio'ya geç — Google IP bloklaması zaman zaman olur |
-| Overlay yanlış yerde | Üstüne tıklayıp sürükle, konum bir sonraki açılışa kadar kalır |
-| LM Studio bağlanmıyor | LM Studio'da Local Server'ın çalıştığından ve URL'nin doğru olduğundan emin ol |
-| Çeviri sırasında FPS düşüyor | Tarama aralığını artır veya DeepL/Google'a geç |
+| "Windows OCR'da '…' dil paketi yok" | Windows Ayarları > Saat ve dil > Dil > dili ekle ("Optik karakter tanıma" işaretli olsun). |
+| "Metin … gibi görünmüyor" | Kaynak dil yanlış seçilmiş. |
+| Metin bozuk okunuyor | Altyazı ekrandayken **Otomatik ayarla**'yı kullan. Olmazsa **Parlak altyazı**'yı dene ve alanı altyazıya göre daralt. |
+| Konuşmacı adının ilk harfleri eksik | Alan adı kesiyor. Alanı soldan biraz genişlet. |
+| Çeviri gecikiyor | Google ve DeepL yerel modellerden hızlıdır. |
+| Kısayollar oyunda çalışmıyor | SubLens'i yönetici olarak çalıştır. |
+| Çeviri katmanı sürüklenmiyor | Ayarlar > Çeviri katmanı bölümünden tıklamaların oyuna geçmesini kapat. |
 
----
+Ayarlar `%APPDATA%\SubLens\config.json` dosyasında tutulur. Sıfırlamak için dosyayı silmen yeterli. v1 ayarları otomatik taşınır.
 
-## Yapılandırma Dosyası
-
-`%APPDATA%\SubLens\config.json` — uygulama açılırken yüklenir, kapanırken kaydedilir. Manuel düzenlenebilir; sıfırlamak için silmek yeterlidir.
-
----
-
-## Bağımsız EXE Oluşturma
-
-```bash
-python _build.py
-```
-
-Oluşan `SubLens.exe` dosyası `dist/` klasörüne yerleştirilir. Tesseract EXE içine gömülüdür — hedef makinede ayrı kurulum gerekmez.
-
----
-
-## Proje Yapısı
+## Proje düzeni
 
 ```
 SubLens/
-├── sublens.py        # Ana uygulama (PySide6)
-├── _build.py         # PyInstaller derleme betiği
-├── SubLens.spec      # PyInstaller spec dosyası
-├── SubLens.ico       # Uygulama ikonu
-├── READMEapp.md      # Uygulama içi yardım belgesi
-├── sublens.bat       # Çalıştırma yardımcısı
-└── calistir.bat      # Alternatif başlatıcı
+├── main.py              Giriş noktası
+├── sublens/
+│   ├── ocr.py           Windows OCR ve görüntü filtreleri
+│   ├── textproc.py      İkon filtresi, satır birleştirme, konuşmacı etiketleri, sözlük
+│   ├── pipeline.py      Tarama ve çeviri thread'leri
+│   ├── engines/         Çeviri motorları
+│   └── ui/              Arayüz
+├── tests/
+├── _build.py            PyInstaller derlemesi
+├── sublens.bat          Kaynak koddan çalıştırma
+├── sublens_exe.bat      Exe derleme
+└── READMEapp*.md        Uygulama içi yardım
 ```
 
----
+İlk tek dosyalık sürüm [`1.0` etiketinde](https://github.com/bnsware/SubLens/tree/1.0) duruyor.
 
 ## Lisans
 
-Bu proje **MIT Lisansı** ile yayınlanmıştır. Ayrıntılar için [LICENSE](LICENSE) dosyasına bak.
-
----
-
-## Teşekkürler
-
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) — UB Mannheim Windows derlemeleri
-- [PySide6](https://doc.qt.io/qtforpython/) — Qt for Python
-- [mss](https://python-mss.readthedocs.io/) — hızlı ekran yakalama
-- [DeepL API](https://www.deepl.com/docs-api) — yüksek kaliteli sinir ağı çevirisi
+[MIT](LICENSE)

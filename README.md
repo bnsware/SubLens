@@ -1,213 +1,138 @@
 # SubLens
 
-> Real-time OCR-powered game dialog translator for Windows — reads text from any screen region and displays the translation in a draggable overlay above your game.
+Reads subtitles and dialogue from any part of your screen and shows a live translation on top of your game. Windows 10/11.
 
 <p align="center">
-  <img src="SubLens.ico" alt="SubLens" width="80"/>
+  <img src="docs/icon.png" alt="SubLens icon" width="80"/>
 </p>
 
-> **TÜRKÇE BİLGİLENDİRME** [README TR](READMEtr.md).
+> **Türkçe:** [READMEtr.md](READMEtr.md)
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="The SubLens window" width="420"/>
+</p>
 
 ---
+
+## Download
+
+Get `SubLens.exe` from [Releases](https://github.com/bnsware/SubLens/releases/latest) and run it. There is nothing to install.
+
+The exe is built with PyInstaller and is not code-signed, so Windows SmartScreen or some antivirus engines may warn about it. You can also [run it from source](#run-from-source).
+
+## Quick start
+
+1. Press **F2** and draw a box around the subtitles in your game. For two-line subtitles, cover both lines.
+2. Choose the languages and a translator. Google Translate needs no setup.
+3. Press **F4** and switch to your game.
+
+If the text reads badly, press **Auto-tune** while a subtitle is on screen.
+
+SubLens reads text with Windows OCR, so the source language's OCR pack must be installed. If it's missing, the app tells you and gives you the command to install it.
 
 ## Features
 
-- **3 translation engines** — switch at any time
-  - **LM Studio** — fully local AI, no internet required (resource-intensive)
-  - **DeepL Free** — 500,000 characters/month, high quality
-  - **Google Translate** — unofficial free endpoint, no API key needed
-- **Smart OCR** powered by Tesseract
-  - 6 preprocessing modes (auto, light text, dark text, subtitle top-hat, stroke/outline, equalize)
-  - Otsu thresholding + median filter + contrast enhancement
-  - 2× / 3× / 4× upscaling options
-  - PSM mode selection (single block, single line, sparse text, raw line)
-  - Automatic best-mode detection (tries all 6 modes, picks highest-confidence result)
-- **Transparent overlay** — floats above the game, color-coded per engine, draggable
-- **Continuous scan** — configurable interval (0.5–15 s), auto-translates when new text is detected
-- **Similarity threshold** — skips re-translation on minor OCR jitter
-- **LRU translation cache** — 200 entries, avoids redundant API calls
-- **Global hotkeys** — work even in fullscreen games (F2 / F3 / F4 + Ctrl+Alt+R/T/G/H)
-- **Auto-pause** — scanning pauses when the target game window loses focus
-- **Glossary** — protect proper nouns and custom terms from being translated
-- **System tray** — minimize to tray, restore with a double-click
-- **Multi-monitor** support
-- **Config** auto-saved to `%APPDATA%\SubLens\config.json`
+**Reading**
+- Windows OCR, built into Windows 10/11. No separate OCR program is needed.
+- Three text styles: Auto, Bright subtitle and Dialog box. Auto-tune picks the best reading settings for you.
+- Wrapped lines are joined into one sentence, and each speaker tag starts a new paragraph.
+- Button icons, symbols and small UI hints are filtered out.
+- Half-faded text that reads as noise waits until it is legible. If a misread was already translated, a clean read replaces it.
+- Damaged speaker labels are repaired ("eter:" or "Peter." becomes "Peter:").
+- Scrolling captions (YouTube, streams) are followed as one stream, so lines aren't translated twice.
 
----
+**Translation**
 
-## Requirements
+| Engine | Setup | Notes |
+|---|---|---|
+| Google Translate | None | Free, but an unofficial endpoint that may be rate-limited |
+| DeepL | API key (free plan available) | Uses previous lines as context |
+| AI (OpenAI-compatible) | LM Studio or Ollama (local), or an OpenAI, OpenRouter or Groq key | Uses conversation context, game context and the glossary |
+| Claude | Anthropic API key | Same context features as above |
+| Gemini | Google AI Studio key | Same context features as above |
 
-| Dependency | Notes |
-|---|---|
-| Python 3.9+ | |
-| [Tesseract OCR](https://github.com/UB-Mannheim/tesseract/wiki) | Install to `C:\Program Files\Tesseract-OCR\` |
-| Pillow | `pip install pillow` |
-| pytesseract | `pip install pytesseract` |
-| PySide6 | `pip install PySide6` |
-| mss *(optional)* | Faster multi-monitor capture — `pip install mss` |
-| keyboard *(optional)* | Global hotkeys — `pip install keyboard` |
-| pywin32 *(optional)* | Auto-pause feature — `pip install pywin32` |
+- AI engines get the previous lines with their translations, so short replies come out right: after "You should try this.", the Turkish "Neyi?" becomes "Try what?" rather than "What?".
+- Glossary: keep names untranslated or force a rendering.
+- Game profiles: area, language, reading settings, context and glossary per game, loaded automatically when bound to the game's exe.
 
-Install all at once:
-
-```bash
-pip install pillow pytesseract PySide6 mss keyboard pywin32
-```
-
-> **Tesseract language packs** — during Tesseract installation, select the languages you need (`eng`, `tur`, `jpn`, `kor`, etc.). If a pack is missing, the app falls back to `eng` and logs a warning.
-
----
-
-## Installation
-
-```bash
-git clone https://github.com/bnsware/SubLens.git
-cd SubLens
-pip install pillow pytesseract PySide6 mss keyboard pywin32
-python sublens.py
-```
-
----
-
-## Quick Start
-
-1. Run `python sublens.py`
-2. Select a **translation engine** (Google requires no setup — great for a first try)
-3. Choose **source** and **target** languages
-4. Press **F2** to draw a rectangle around the dialog box in your game
-5. Press **F3** for a one-shot translation, or **F4** to start continuous scanning
-
----
+**Overlay and app**
+- A draggable overlay sized to the subtitle. It is hidden from screen capture, so it never reads itself back.
+- Font size, opacity, position and click-through settings.
+- English and Turkish interface.
+- Global hotkeys, auto-pause when the game loses focus, and a tray icon with optional notifications.
 
 ## Hotkeys
 
-| Key | Action |
-|---|---|
-| **F2** | Select screen region |
-| **F3** | Translate once |
-| **F4** | Start / stop continuous scan |
-| **ESC** | Hide overlay / cancel region selection |
-| **Ctrl+Alt+R** | Select region (global) |
-| **Ctrl+Alt+T** | Translate once (global) |
-| **Ctrl+Alt+G** | Toggle scan (global) |
-| **Ctrl+Alt+H** | Hide overlay (global) |
+| Key | Global alternative | Action |
+|---|---|---|
+| F2 | Ctrl+Alt+R | Select area |
+| F3 | Ctrl+Alt+T | Translate once |
+| F4 | Ctrl+Alt+G | Start / stop |
+| Esc | Ctrl+Alt+H | Hide overlay |
 
----
+Global hotkeys also work in fullscreen games. If the game runs as administrator, run SubLens as administrator too. Hotkeys can't be remapped yet. If your keyboard has no F keys, use the Ctrl+Alt shortcuts or the buttons in the window.
 
-## Engine Setup
+## Run from source
 
-### LM Studio
-1. Open LM Studio → load a model → start **Local Server** (default port: 1234)
-2. In SubLens Settings, enter the **URL** and **Model**, then click **Connect** to verify
-- ✅ Fully offline, privacy-friendly
-- ⚠️ GPU/RAM intensive — may reduce FPS in demanding games
+Tested on Python 3.13.
 
-### DeepL Free
-1. Create a free account at [deepl.com](https://www.deepl.com/) → get a Free API key
-2. Paste the key into SubLens Settings → click **Test** to check monthly usage
-- ✅ Highest translation quality, low resource usage
-- ⚠️ 500k character/month limit
-
-### Google Translate
-- No API key required, works instantly
-- ✅ Zero setup
-- ⚠️ Unofficial endpoint — Google may rate-limit or block it occasionally
-
----
-
-## OCR Tips
-
-- **Scale**: try 3× or 4× for small text
-- **OCR Mode**:
-  - *Auto* — selects mode based on background brightness
-  - *Light text* — bright text on dark background
-  - *Dark text* — dark text on light background
-  - *Subtitle (top-hat)* — **best for complex/busy backgrounds** (water, blurred landscapes, UI elements). Uses local background removal + adaptive thresholding. Great for games like RDR2 or Spider-Man 2.
-  - *Stroke outline* — for outlined/contoured subtitle text
-  - *Equalize* — histogram equalization for highly varied backgrounds
-- **PSM 6** works well for most dialog boxes; try **PSM 7** for single-line subtitles
-- Enable **Preview processed image** to see exactly what Tesseract receives — invaluable for tuning
-
----
-
-## Game Context (LM Studio only)
-
-In Settings → **Game Context**, you can provide a hint to guide the translation tone:
-
-> Example: `Wild West, 1899, cowboy dialogue`
-
-DeepL and Google ignore this field.
-
----
-
-## Glossary
-
-In Settings → **Glossary**, add one entry per line:
-
-```
-Arthur=Arthur
-RedDead
-Guarma=Guarma
+```bat
+git clone https://github.com/bnsware/SubLens.git
+cd SubLens
+sublens.bat
 ```
 
-- `term` alone — keeps the word as-is (no translation)
-- `source=target` — replaces the source term with `target` after translation
+`sublens.bat` creates a virtual environment, installs the dependencies and starts the app. To do it by hand:
 
----
+```bat
+pip install -r requirements.txt
+python main.py
+```
+
+Run the tests with `python -m unittest discover tests`.
+
+## Build the exe
+
+```bat
+sublens_exe.bat
+```
+
+The result is `dist\SubLens.exe`.
 
 ## Troubleshooting
 
-| Symptom | Solution |
+| Symptom | Fix |
 |---|---|
-| "Tesseract language pack not found" | Add the `.traineddata` file for the required language to the Tesseract folder |
-| OCR returns empty text | Tighten the region, increase scale, or manually select OCR mode |
-| Google engine errors | Temporarily switch to DeepL or LM Studio — Google may be rate-limiting your IP |
-| Overlay appears in the wrong position | Click and drag it; position persists until the next launch |
-| LM Studio not connecting | Ensure Local Server is running in LM Studio and the URL is correct |
-| Low FPS while translating | Increase the scan interval, or switch to DeepL/Google |
+| "Windows OCR has no '…' language pack" | Windows Settings > Time & language > Language > add the language, with "Optical character recognition" ticked. |
+| "The text doesn't look like …" | The source language is wrong. |
+| Garbled text | Use **Auto-tune** with a subtitle on screen. Otherwise try **Bright subtitle** and fit the area tightly around the subtitle. |
+| Speaker names lose their first letters | The area cuts the name off. Widen it a little to the left. |
+| Translations lag | Google and DeepL are faster than local models. |
+| Hotkeys don't work in game | Run SubLens as administrator. |
+| Overlay won't drag | Turn off click-through under Settings > Overlay. |
 
----
+Settings are stored in `%APPDATA%\SubLens\config.json`. Delete the file to reset them. Settings from v1 are migrated automatically.
 
-## Configuration File
-
-`%APPDATA%\SubLens\config.json` — loaded on startup, saved on exit. Safe to edit manually; delete it to reset all settings.
-
----
-
-## Building a Standalone EXE
-
-```bash
-python _build.py
-```
-
-The resulting `SubLens.exe` is placed in the `dist/` folder. Tesseract is bundled inside the executable — no separate installation needed on the target machine.
-
----
-
-## Project Structure
+## Project layout
 
 ```
 SubLens/
-├── sublens.py        # Main application (PySide6)
-├── _build.py         # PyInstaller build script
-├── SubLens.spec      # PyInstaller spec file
-├── SubLens.ico       # Application icon
-├── READMEapp.md      # In-app help document
-├── sublens.bat       # Run helper (bat)
-└── calistir.bat      # Alternative launcher
+├── main.py              Entry point
+├── sublens/
+│   ├── ocr.py           Windows OCR and image filters
+│   ├── textproc.py      Icon filter, line joining, speaker labels, glossary
+│   ├── pipeline.py      Scanning and translation threads
+│   ├── engines/         Translation engines
+│   └── ui/              Interface
+├── tests/
+├── _build.py            PyInstaller build
+├── sublens.bat          Run from source
+├── sublens_exe.bat      Build the exe
+└── READMEapp*.md        In-app help
 ```
 
----
+The original single-file version is available under the [`1.0` tag](https://github.com/bnsware/SubLens/tree/1.0).
 
 ## License
 
-This project is released under the **MIT License**. See [LICENSE](LICENSE) for details.
-
----
-
-## Acknowledgements
-
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) — UB Mannheim Windows builds
-- [PySide6](https://doc.qt.io/qtforpython/) — Qt for Python
-- [mss](https://python-mss.readthedocs.io/) — fast screen capture
-- [DeepL API](https://www.deepl.com/docs-api) — high-quality neural translation
+[MIT](LICENSE)
