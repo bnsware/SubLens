@@ -50,8 +50,10 @@ SubLens reads text with Windows OCR, so the source language's OCR pack must be i
 | AI (OpenAI-compatible) | LM Studio or Ollama (local), or an OpenAI, OpenRouter or Groq key | Uses conversation context, game context and the glossary |
 | Claude | Anthropic API key | Same context features as above |
 | Gemini | Google AI Studio key | Same context features as above |
+| No translation | None | Shows the text as read, offline. Useful for small or blurry text in games you can already read. |
 
 - AI engines get the previous lines with their translations, so short replies come out right: after "You should try this.", the Turkish "Neyi?" becomes "Try what?" rather than "What?".
+- No translation: shows the text exactly as read, enlarged in the overlay. It works offline.
 - Glossary: keep names untranslated or force a rendering.
 - Game profiles: area, language, reading settings, context and glossary per game, loaded automatically when bound to the game's exe.
 
@@ -60,6 +62,7 @@ SubLens reads text with Windows OCR, so the source language's OCR pack must be i
 - Font size, opacity, position and click-through settings.
 - English and Turkish interface.
 - Global hotkeys, auto-pause when the game loses focus, and a tray icon with optional notifications.
+- Tells you when a new version is out, with its release notes and a download link.
 
 ## Hotkeys
 

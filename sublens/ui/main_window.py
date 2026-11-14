@@ -7,15 +7,16 @@ import time
 from pathlib import Path
 
 from PIL import Image
-from PySide6.QtCore import Qt, QObject, QTimer, Signal, QRectF, QLibraryInfo, QTranslator
-from PySide6.QtGui import (QImage, QPixmap, QShortcut, QKeySequence, QPainter, QColor, QFont)
+from PySide6.QtCore import Qt, QObject, QTimer, Signal, QRectF, QLibraryInfo, QTranslator, QUrl
+from PySide6.QtGui import (QImage, QPixmap, QShortcut, QKeySequence, QPainter, QColor, QFont,
+                           QDesktopServices)
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox,
     QFrame, QTextEdit, QToolButton, QMenu, QSystemTrayIcon, QInputDialog, QMessageBox,
     QButtonGroup, QDialog, QTextBrowser, QApplication, QSizePolicy, QScrollArea,
 )
 
-from .. import config, __version__, i18n
+from .. import config, __version__, i18n, updates
 from ..capture import GRABBER
 from ..engines import create_all
 from ..i18n import t
@@ -45,6 +46,7 @@ class Bridge(QObject):
     busy = Signal(bool)
     status = Signal(str, str)
     hotkey = Signal(str)
+    update = Signal(object, bool)   # release info ({} if the check failed), asked by the user
 
 
 def pil_to_pixmap(img: Image.Image) -> QPixmap:
@@ -261,6 +263,8 @@ class MainWindow(QMainWindow):
 
         self._refresh_region()
         self._check_ocr_ready()
+        if self.cfg.get("check_updates", True):
+            QTimer.singleShot(4000, lambda: self._check_updates(manual=False))
 
     def _apply_language(self, lang: str):
         i18n.set_lang(lang)
@@ -437,6 +441,7 @@ class MainWindow(QMainWindow):
                        if not self._status_sticky else None)
         b.status.connect(self._set_status)
         b.hotkey.connect(self._on_hotkey)
+        b.update.connect(self._on_update)
 
     def _wire_widgets(self):
         self.pick_btn.clicked.connect(self._pick_region)
@@ -584,7 +589,7 @@ class MainWindow(QMainWindow):
         self.scanner.roller.reset()
         self._save()
         self._check_ocr_ready()
-        if self.cfg["src_lang"] == self.cfg["tgt_lang"]:
+        if self.cfg["src_lang"] == self.cfg["tgt_lang"] and self.cfg["engine"] != "none":
             self._log(t("Source and target language are the same."), "warn")
 
     def _swap_langs(self):
@@ -607,7 +612,11 @@ class MainWindow(QMainWindow):
     def _update_engine_note(self):
         eng = self.engines[self.cfg["engine"]]
         note = t(eng.note)
-        if not eng.is_llm:
+        # without a translator the target language means nothing
+        translating = eng.key != "none"
+        self.tgt.setEnabled(translating)
+        self.swap_btn.setEnabled(translating)
+        if translating and not eng.is_llm:
             note += "  " + t("Only AI engines translate short replies from the conversation's context.")
         self.engine_note.setText(note)
 
@@ -883,8 +892,74 @@ class MainWindow(QMainWindow):
                     md = p.read_text(encoding="utf-8")
         tb.setMarkdown(md or "README not found.")
         v = QVBoxLayout(dlg); v.addWidget(tb)
+        foot = QHBoxLayout()
         ver = QLabel(f"SubLens {__version__}"); ver.setObjectName("hint")
-        v.addWidget(ver)
+        upd = QPushButton(t("Check for updates")); upd.setObjectName("flat")
+        upd.clicked.connect(lambda: self._check_updates(manual=True))
+        foot.addWidget(ver); foot.addStretch(1); foot.addWidget(upd)
+        v.addLayout(foot)
+        dlg.exec()
+
+    # ================================================================== updates
+    def _check_updates(self, manual: bool):
+        def run():
+            try:
+                info = updates.latest_release()
+            except Exception as e:
+                if not manual:
+                    return          # offline or GitHub unreachable: say nothing
+                self.bridge.log.emit(t("Update check failed: {}", e), "warn")
+                info = {}
+            self.bridge.update.emit(info, manual)
+        if manual:
+            self._set_status(t("Checking for updates…"), theme.DIM)
+        threading.Thread(target=run, daemon=True, name="update-check").start()
+
+    def _on_update(self, info, manual: bool):
+        if not info:
+            self._set_status(t("Update check failed"), theme.WARN)
+            return
+        if not updates.is_newer(info["tag"]) or (
+                not manual and info["version"] == self.cfg.get("skip_version")):
+            if manual:
+                self._set_status("", theme.DIM)
+                QMessageBox.information(self, "SubLens",
+                                        t("You have the latest version ({}).", __version__))
+            return
+        self._log(t("SubLens {} is available.", info["version"]), "ok")
+        dlg = QDialog(self)
+        dlg.setWindowTitle(t("SubLens {} is available", info["version"]))
+        dlg.resize(620, 540)
+        v = QVBoxLayout(dlg)
+        head = QLabel(t("A new version is available. You have {}.", __version__))
+        head.setWordWrap(True)
+        v.addWidget(head)
+        notes = QTextBrowser()
+        notes.setOpenExternalLinks(True)
+        notes.setMarkdown(info["notes"] or t("No release notes."))
+        v.addWidget(notes, 1)
+        row = QHBoxLayout()
+        skip = QPushButton(t("Skip this version")); skip.setObjectName("flat")
+        later = QPushButton(t("Later"))
+        get = QPushButton(t("Download")); get.setObjectName("primary")
+        row.addWidget(skip); row.addStretch(1); row.addWidget(later); row.addWidget(get)
+        v.addLayout(row)
+
+        def download():
+            QDesktopServices.openUrl(QUrl(info["download"]))
+            dlg.accept()
+
+        def skip_it():
+            self.cfg["skip_version"] = info["version"]
+            self._save()
+            dlg.reject()
+
+        get.clicked.connect(download)
+        later.clicked.connect(dlg.reject)
+        skip.clicked.connect(skip_it)
+        get.setDefault(True)
+        if not self.isVisible():        # running in the tray: bring the window up for it
+            self.showNormal()
         dlg.exec()
 
     # ================================================================== tray / quit

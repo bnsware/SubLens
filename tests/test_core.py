@@ -280,6 +280,15 @@ class TestTranslator(unittest.TestCase):
         self.assertEqual(tr.context(), [])
         tr.stop()
 
+    def test_no_translation_shows_text_as_read(self):
+        from sublens.engines import create_all
+        cfg = copy.deepcopy(config.DEFAULTS)
+        cfg["engine"] = "none"
+        cfg["glossary"] = "Dutch"
+        tr = Translator(cfg, create_all(), Events())
+        self.assertEqual(tr.translate_now("Dutch says: get the horses."),
+                         "Dutch says: get the horses.")
+
     def test_correction_drops_the_misread(self):
         cfg = copy.deepcopy(config.DEFAULTS)
         cfg["engine"] = "fake"
@@ -433,6 +442,26 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(cfg["engines"]["openai"]["base_url"], "http://localhost:1234/v1")
         self.assertEqual(cfg["engines"]["deepl"]["api_key"], "abc:fx")
         self.assertEqual(cfg["engines"]["claude"]["model"], "claude-opus-5-5")
+
+
+class TestUpdates(unittest.TestCase):
+    def test_version_compare(self):
+        from sublens import updates
+        self.assertTrue(updates.is_newer("v2.3.1", "2.3.0"))
+        self.assertTrue(updates.is_newer("3.0", "2.9.9"))
+        self.assertFalse(updates.is_newer("v2.3.0", "2.3.0"))
+        self.assertFalse(updates.is_newer("2.3", "2.3.0"))
+        self.assertFalse(updates.is_newer("1.0", "2.3.0"))     # the old v1 tag
+        self.assertFalse(updates.is_newer("nightly", "2.3.0"))
+
+    def test_release_info_prefers_the_exe(self):
+        from sublens import updates
+        info = updates.release_info({
+            "tag_name": "v2.4.0", "body": "notes", "html_url": "https://github.com/x/r/1",
+            "assets": [{"name": "SubLens.exe", "browser_download_url": "https://dl/SubLens.exe"}]})
+        self.assertEqual((info["version"], info["download"]), ("2.4.0", "https://dl/SubLens.exe"))
+        self.assertEqual(updates.release_info({"tag_name": "v2.4.0"})["download"],
+                         updates.RELEASES)
 
 
 if __name__ == "__main__":

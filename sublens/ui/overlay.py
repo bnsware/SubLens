@@ -86,7 +86,7 @@ class Overlay(QWidget):
     # -- content ----------------------------------------------------------------
     def show_translation(self, translation: str, original: str, region):
         self.restyle()
-        show_orig = bool(self.cfg.get("overlay_show_original")) and original
+        show_orig = bool(self.cfg.get("overlay_show_original")) and original and original != translation
         self.orig.setVisible(bool(show_orig))
         self.orig.setText(original if show_orig else "")
         self.text.setText(translation)

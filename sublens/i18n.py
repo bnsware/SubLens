@@ -201,6 +201,11 @@ TR = {
         "PowerShell'de:  Add-WindowsCapability -Online -Name \"Language.OCR~~~{}~0.0.1.0\"",
 
     # engine notes
+    "No translation (text only)": "Çeviri yok (yalnızca metin)",
+    "Shows the text as it is read, without translating. Works offline - "
+    "handy for small or hard-to-read text.":
+        "Metni çevirmeden, okunduğu gibi gösterir. İnternetsiz çalışır; küçük ya da "
+        "zor okunan yazılar için kullanışlıdır.",
     "Free, no key. Unofficial endpoint - Google may rate-limit it.":
         "Ücretsiz, anahtar gerekmez. Gayri resmi uç nokta - Google yoğun kullanımı kısıtlayabilir.",
     "Best quality machine translation. Free plan: 500k characters / month.":
@@ -300,4 +305,17 @@ TR = {
     "Closing the window keeps SubLens in the tray":
         "Pencereyi kapatınca SubLens sistem tepsisinde kalsın",
     "Show Windows notifications": "Windows bildirimlerini göster",
+    "Check for new versions at startup": "Açılışta yeni sürümü kontrol et",
+    "Check for updates": "Güncellemeleri kontrol et",
+    "Checking for updates…": "Güncellemeler kontrol ediliyor…",
+    "Update check failed": "Güncelleme kontrolü başarısız",
+    "Update check failed: {}": "Güncelleme kontrolü başarısız: {}",
+    "You have the latest version ({}).": "En son sürümü kullanıyorsun ({}).",
+    "SubLens {} is available.": "SubLens {} yayınlandı.",
+    "SubLens {} is available": "SubLens {} yayınlandı",
+    "A new version is available. You have {}.": "Yeni bir sürüm var. Sendeki sürüm: {}.",
+    "No release notes.": "Sürüm notu yok.",
+    "Skip this version": "Bu sürümü atla",
+    "Later": "Daha sonra",
+    "Download": "İndir",
 }

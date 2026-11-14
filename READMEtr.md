@@ -50,8 +50,10 @@ SubLens metni Windows OCR ile okur, bu yüzden kaynak dilin OCR paketi kurulu ol
 | AI (OpenAI uyumlu) | LM Studio ya da Ollama (yerel) veya OpenAI, OpenRouter, Groq anahtarı | Konuşma bağlamını, oyun bağlamını ve sözlüğü kullanır |
 | Claude | Anthropic API anahtarı | Bağlam özellikleri yukarıdakiyle aynı |
 | Gemini | Google AI Studio anahtarı | Bağlam özellikleri yukarıdakiyle aynı |
+| Çeviri yok | Yok | Metni okunduğu gibi, internetsiz gösterir. Zaten okuyabildiğin dildeki küçük ya da bulanık yazılar için. |
 
 - AI motorlarına önceki satırlar çevirileriyle birlikte gider, bu yüzden kısa cevaplar doğru çevrilir: "Bunu denemelisin." cümlesinden sonra gelen "Neyi?", "What?" değil "Try what?" olur.
+- Çeviri yok: metni okunduğu gibi, çeviri kutusunda büyütülmüş olarak gösterir. İnternetsiz çalışır.
 - Sözlük: adları çevirmeden bırakabilir ya da belirli bir karşılığı zorlayabilirsin.
 - Oyun profilleri: alan, dil, okuma ayarları, bağlam ve sözlük oyun bazında saklanır. Oyunun exe'sine bağlanırsa kendiliğinden yüklenir.
 
@@ -60,6 +62,7 @@ SubLens metni Windows OCR ile okur, bu yüzden kaynak dilin OCR paketi kurulu ol
 - Yazı boyutu, saydamlık, konum ve tıklamaların oyuna geçmesi ayarları.
 - Türkçe ve İngilizce arayüz.
 - Global kısayollar, oyun öne çıkmadığında otomatik duraklama ve kapatılabilir bildirimli sistem tepsisi simgesi.
+- Yeni sürüm çıktığında sürüm notlarını ve indirme bağlantısını gösterir.
 
 ## Kısayollar
 

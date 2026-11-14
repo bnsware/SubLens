@@ -121,6 +121,7 @@ QToolButton:hover {{ color: {TEXT}; }}
 QToolButton#icon {{ background: {SURFACE_2}; border: 1px solid {BORDER}; border-radius: 5px;
     padding: 4px; }}
 QToolButton#icon:hover {{ background: {SURFACE_3}; }}
+QToolButton#icon:disabled {{ background: {SURFACE}; border-color: {SURFACE_2}; }}
 
 QTabWidget::pane {{ border: 1px solid {BORDER}; border-radius: 6px; top: -1px; background: {SURFACE}; }}
 QTabBar::tab {{ background: transparent; color: {DIM}; padding: 8px 16px; border: none; }}

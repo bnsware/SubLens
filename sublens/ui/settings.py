@@ -104,6 +104,8 @@ class SettingsDialog(QDialog):
         row.addWidget(QLabel(t("Configure:")))
         self.eng_pick = QComboBox()
         for key, eng in self.engines.items():
+            if key == "none":           # nothing to configure
+                continue
             self.eng_pick.addItem(theme.dot_icon(theme.ENGINE_COLOR.get(key, theme.DIM)),
                                   t(eng.name), key)
         row.addWidget(self.eng_pick, 1)
@@ -334,6 +336,9 @@ class SettingsDialog(QDialog):
         self.notify = QCheckBox(t("Show Windows notifications"))
         self.notify.setChecked(bool(self.cfg.get("notifications", True)))
         f.addRow(self.notify)
+        self.updates = QCheckBox(t("Check for new versions at startup"))
+        self.updates.setChecked(bool(self.cfg.get("check_updates", True)))
+        f.addRow(self.updates)
         return w
 
     # -- save -------------------------------------------------------------------------
@@ -366,4 +371,5 @@ class SettingsDialog(QDialog):
         c["auto_pause"] = self.auto_pause.isChecked()
         c["minimize_to_tray"] = self.tray.isChecked()
         c["notifications"] = self.notify.isChecked()
+        c["check_updates"] = self.updates.isChecked()
         self.accept()

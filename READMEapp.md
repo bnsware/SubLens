@@ -29,6 +29,7 @@ Okuma kötüyse ekranda bir altyazı varken **Otomatik ayarla** düğmesine bas.
 | **AI (OpenAI uyumlu)** | LM Studio / Ollama (yerel, internetsiz) ya da OpenAI, OpenRouter, Groq anahtarı | Oyun bağlamını, sözlüğü ve önceki satırları anlar. |
 | **Claude** | Anthropic API anahtarı | Opus en kaliteli seçenek, Haiku hızlı diyaloglar için daha hızlı ve ucuz. |
 | **Gemini** | Google AI Studio anahtarı | Ücretsiz katmanı var. |
+| **Çeviri yok** | Yok | Metni çevirmeden, okunduğu gibi gösterir. İnternetsiz çalışır. Zaten bildiğin dildeki küçük ya da bulanık yazıları okumak için çeviri kutusunun yazı boyutunu Ayarlar > Çeviri katmanı'ndan büyüt. |
 
 Ayarlar > Çeviri sekmesinde her motorun **Test** düğmesi var.
 
@@ -86,6 +87,8 @@ Global kısayollar oyun tam ekrandayken de çalışır. Oyun yönetici olarak ç
 | Kısayollar oyunda çalışmıyor | SubLens'i yönetici olarak çalıştır. |
 
 Arayüz dili sağ üstteki **EN / TR** düğmesiyle (ya da Ayarlar > Genel) değiştirilir. Windows bildirimleri de Ayarlar > Genel'den kapatılır.
+
+SubLens açılışta GitHub'da yeni sürüm olup olmadığına bakar. Yeni sürüm varsa sürüm notlarını gösterir ve İndir düğmesiyle yeni exe'yi indirir. Bu kontrol Ayarlar > Genel'den kapatılabilir, Yardım penceresindeki **Güncellemeleri kontrol et** düğmesiyle de elle yapılabilir.
 
 Ayarlar `%APPDATA%\SubLens\config.json` dosyasında tutulur. Eski sürümün ayarları otomatik taşınır. Dosya bozulursa silmek yeterlidir.
 

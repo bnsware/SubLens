@@ -65,6 +65,8 @@ DEFAULTS: dict = {
     "global_hotkeys": True,
     "minimize_to_tray": True,
     "notifications": True,          # Windows notifications from the tray icon
+    "check_updates": True,          # ask GitHub for a newer release at startup
+    "skip_version": "",             # a release the user chose to skip
     "profile": "",
     "profiles": {},                 # name -> {PROFILE_KEYS..., "exe": "game.exe"}
 }

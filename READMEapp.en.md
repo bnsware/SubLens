@@ -29,6 +29,7 @@ If reading is poor, press **Auto-tune** while a subtitle is on screen. It tries 
 | **AI (OpenAI-compatible)** | LM Studio / Ollama (local, offline) or an OpenAI, OpenRouter, Groq key | Understands game context, glossary and previous lines. |
 | **Claude** | Anthropic API key | Opus is the best quality; Haiku is faster and cheaper for quick dialogue. |
 | **Gemini** | Google AI Studio key | Has a free tier. |
+| **No translation** | None | Shows the text as read, without translating. Works offline. To read small or blurry text in a language you know, raise the font size under Settings > Overlay. |
 
 Every engine has a **Test** button under Settings > Translation.
 
@@ -85,5 +86,7 @@ Global shortcuts work in fullscreen games too. If the game runs as administrator
 | Shortcuts don't work in game | Run SubLens as administrator. |
 
 Switch the interface language with **EN / TR** at the top right (or Settings > General). Windows notifications can be turned off under Settings > General too.
+
+At startup SubLens asks GitHub whether a newer version exists. If one does, it shows the release notes and a Download button for the new exe. Turn this off under Settings > General, or check by hand with **Check for updates** in the Help window.
 
 Settings live in `%APPDATA%\SubLens\config.json`. Delete it if it ever gets corrupted.
